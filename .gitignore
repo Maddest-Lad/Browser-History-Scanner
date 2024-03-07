@@ -1,0 +1,4 @@
+# Environment
+venv/
+Logs/**
+__pycache__/
