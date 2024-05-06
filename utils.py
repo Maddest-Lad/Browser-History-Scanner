@@ -1,4 +1,4 @@
-import os
+import wmi
 import shutil
 import tempfile
 from pathlib import Path
@@ -18,3 +18,12 @@ class temporary_copy(object):
             self.new_path.unlink()
         except (FileNotFoundError, PermissionError):
             pass
+
+
+def get_users():
+    c = wmi.WMI()
+    return [user.Name for user in c.Win32_UserAccount()]
+         
+def get_drive_letter():
+    c = wmi.WMI()
+    return c.Win32_OperatingSystem()[0].SystemDrive

@@ -1,8 +1,34 @@
 from dataclasses import dataclass
 import datetime
+import glob
+import os
 from pathlib import Path
 import sqlite3
-from utils import temporary_copy
+from utils import temporary_copy, get_drive_letter
+
+def get_browsers(users=None):
+    """Retrieves all Chromium-based browsers installed on the system."""
+    history_files = _get_history_files(users)
+    browsers = []
+    for history_file in history_files:
+        browsers.append(Browser(history_file))
+        
+    return browsers
+
+def _get_history_files(users=None):
+    """Retrieves history files matching chromuim's folder structure"""
+    if not users: # Default to Current User
+        local_appdata = os.environ.get('LOCALAPPDATA')
+        search_pattern = os.path.join(local_appdata, '*', '*', 'User Data', 'Default', 'History') 
+        print(search_pattern)
+        return glob.glob(search_pattern)
+    else:
+        paths = []
+        for user in users:
+            search_pattern = os.path.join(f'{get_drive_letter()}\\', 'Users', user, 'AppData', 'Local', '*', '*', 'User Data', 'Default', 'History')
+            print(search_pattern)
+            paths.extend(glob.glob(search_pattern))
+        return paths
 
 @dataclass
 class Entry:
@@ -13,11 +39,18 @@ class Entry:
     typed_count: int
     last_visit_time: datetime.datetime
 
-class ChromiumHandler:
-
+class Browser:
+    vendor: str
+    name: str
+    history_path: Path
+    
     def __init__(self, history_path: Path):
         self.history_path = history_path
-    
+        
+        parts = history_path.split(os.sep)
+        self.vendor = parts[-5]
+        self.name = parts[-4]
+        
     def webkit_timestamp_to_datetime(self, webkit_timestamp):
         """Converts a WebKit timestamp to a datetime object."""
         # WebKit timestamp is microseconds since January 1, 1601
@@ -40,3 +73,6 @@ class ChromiumHandler:
                 entry = Entry(id, url, title, visit_count, typed_count, last_visit_time)
                 entries.append(entry)
             return entries
+
+    def __repr__(self):
+        return f'{self.vendor} {self.name}'
