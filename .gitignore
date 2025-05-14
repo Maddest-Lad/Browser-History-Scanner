@@ -2,3 +2,4 @@
 venv/
 Logs/**
 __pycache__/
+*.db
