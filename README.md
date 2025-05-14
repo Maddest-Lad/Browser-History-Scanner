@@ -8,35 +8,36 @@ A Python utility to scan and consolidate browser history data from multiple brow
 - Configurable browser history paths
 - Unified database storage
 - History statistics reporting
-- Modular architecture with separate configuration and database modules
 
-## Requirements
-Ensure you have Python 3.7+ installed. Install dependencies using:
+## Setup
+1. Ensure you have [Python 3.10+](https://www.python.org/downloads/release/python-3100/) installed.
+2. Clone the Repository:
+```bash
+git clone https://github.com/Maddest-Lad/Browser-History-Scanner.git
+```
+3. _Optionally_ [Create a virtual environment](https://docs.python.org/3/library/venv.html)
+
+4. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
-
-## Configuration
-1. Copy the sample config from the repository
-2. Configure browser path patterns in `config.ini` according to your system
-3. Ensure all required browser history files are accessible
-
-## Usage
+5. Run the Scanner:
 ```bash
 python main.py
 ```
+---
 This will:
 1. Detect your operating system
 2. Load configuration from `config.ini`
 3. Locate browser history files
 4. Create a unified database at `unified_history.db`
-5. Display statistical information about the collected data
+5. Display a preview of collected data
 
 ## Project Structure
 - `main.py` - Entry point and core logic
 - `config.ini` - Browser path configuration
 - `database.py` - Database operations module
-- `requirements.txt` - Dependency list
+- `requirements.txt` - Dependencies
 - `utils.py` - Utility functions
 
 ## Output
