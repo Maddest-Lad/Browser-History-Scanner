@@ -1,17 +1,13 @@
 import os
 import glob
+from pathlib import Path
 import platform
 import configparser
-from pathlib import Path
-from dataclasses import dataclass
+import logging
 from typing import List
+from database import HistoryLocation, create_unified_history_db, display_unified_db_stats
 
-
-@dataclass
-class HistoryLocation:
-    browser: str
-    path: str
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_os_key() -> str:
     return {
@@ -20,17 +16,14 @@ def get_os_key() -> str:
         'linux': 'linux'
     }.get(platform.system().lower(), '')
 
-
 def load_config(path: str) -> configparser.ConfigParser:
     config = configparser.RawConfigParser()
     config.read(path)
     return config
 
-
 def resolve_pattern(pattern: str) -> List[str]:
     expanded = os.path.expandvars(os.path.expanduser(pattern))
     return glob.glob(expanded, recursive=True)
-
 
 def find_browser_history_files(config: configparser.ConfigParser, os_key: str) -> List[HistoryLocation]:
     results = []
@@ -44,16 +37,25 @@ def find_browser_history_files(config: configparser.ConfigParser, os_key: str) -
 
     return results
 
-
 if __name__ == "__main__":
-    config_path = "config.ini"
     os_key = get_os_key()
+    config_path = Path("config.ini")
 
     if not os_key:
         raise RuntimeError("Unsupported platform")
+    
+    if not config_path.exists():
+        raise RuntimeError("Browser Config Missing, Please Pull Down a Fresh Copy From https://github.com/Maddest-Lad/Browser-History-Scanner")
 
     config = load_config(config_path)
+    
     history_locations = find_browser_history_files(config, os_key)
 
     for loc in history_locations:
-        print(f"{loc.browser}: {loc.path}")
+        logging.info(f"Found history for {loc.browser}: {loc.path}")
+    
+    unified_db_path = "unified_history.db"
+    create_unified_history_db(unified_db_path, history_locations)
+    logging.info(f"Unified history database created at: {unified_db_path}")
+
+    display_unified_db_stats(unified_db_path)
