@@ -33,6 +33,17 @@ def create_unified_history_db(db_path: str, history_locations: List[HistoryLocat
         )
         ''')
 
+        # Create domain statistics table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS domain_stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            domain TEXT NOT NULL,
+            subdomain TEXT,
+            visit_count INTEGER DEFAULT 0,
+            UNIQUE(domain, subdomain)
+        )
+        ''')
+
         # Create index on url column
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_url ON unified_history (url)')
 
@@ -61,6 +72,7 @@ def display_unified_db_stats(db_path: str) -> None:
     cursor = conn.cursor()
 
     try:
+        # Unified history stats
         cursor.execute("SELECT COUNT(*) FROM unified_history")
         total_entries = cursor.fetchone()[0]
         
@@ -70,6 +82,15 @@ def display_unified_db_stats(db_path: str) -> None:
         cursor.execute("SELECT url, title, visit_count FROM unified_history ORDER BY visit_count DESC LIMIT 5")
         top_sites = cursor.fetchall()
 
+        # Domain statistics
+        cursor.execute("""
+            SELECT domain, subdomain, visit_count 
+            FROM domain_stats 
+            ORDER BY visit_count DESC 
+            LIMIT 5
+        """)
+        top_domains = cursor.fetchall()
+
         logging.info(f"Total entries in unified history: {total_entries}")
         for browser, count in browser_stats:
             logging.info(f"Entries from {browser}: {count}")
@@ -77,6 +98,13 @@ def display_unified_db_stats(db_path: str) -> None:
         logging.info("Top 5 most visited sites:")
         for url, title, visit_count in top_sites:
             logging.info(f"{title} ({url}) - Visited {visit_count} times")
+
+        logging.info("Top 5 most frequent domains:")
+        for domain, subdomain, count in top_domains:
+            if subdomain:
+                logging.info(f"{subdomain}.{domain} - {count} visits")
+            else:
+                logging.info(f"{domain} - {count} visits")
 
     except Exception as e:
         logging.error(f"Error displaying database stats: {str(e)}")
@@ -107,9 +135,24 @@ def process_browser_history(cursor: sqlite3.Cursor, db_path: str, browser: str) 
 
     for row in browser_cursor.fetchall():
         url, title, visit_count, last_visit_time = row
+        # Insert into main history table
         cursor.execute('''
         INSERT INTO unified_history (url, title, visit_count, last_visit_time, browser)
         VALUES (?, ?, ?, ?, ?)
         ''', (url, title, visit_count, last_visit_time, browser))
+        
+        # Extract domain and subdomain for statistics
+        if '://' in url:
+            domain_part = url.split('://')[1].split('/')[0]
+            if '.' in domain_part:
+                parts = domain_part.split('.')
+                if len(parts) >= 2:
+                    domain = '.'.join(parts[-2:])
+                    subdomain = '.'.join(parts[:-2]) if len(parts) > 2 else None
+                    cursor.execute('''
+                    INSERT INTO domain_stats (domain, subdomain, visit_count)
+                    VALUES (?, ?, 1)
+                    ON CONFLICT(domain, subdomain) DO UPDATE SET visit_count = visit_count + 1
+                    ''', (domain, subdomain))
 
     browser_conn.close()
