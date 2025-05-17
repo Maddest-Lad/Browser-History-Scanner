@@ -2,7 +2,7 @@ import sqlite3
 import logging
 from typing import List
 from dataclasses import dataclass
-from utils import temporary_copy
+from lib.files import temporary_copy
 
 @dataclass
 class HistoryLocation:
@@ -148,7 +148,10 @@ def process_browser_history(cursor: sqlite3.Cursor, db_path: str, browser: str) 
                 parts = domain_part.split('.')
                 if len(parts) >= 2:
                     domain = '.'.join(parts[-2:])
-                    subdomain = '.'.join(parts[:-2]) if len(parts) > 2 else None
+                    labels_before_reg = parts[:-2]
+                    if labels_before_reg and labels_before_reg[0].lower() == 'www':
+                        labels_before_reg = labels_before_reg[1:]
+                    subdomain = '.'.join(labels_before_reg) if labels_before_reg else None
                     cursor.execute('''
                     INSERT INTO domain_stats (domain, subdomain, visit_count)
                     VALUES (?, ?, 1)

@@ -65,7 +65,8 @@ def write_json(data, out_path):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-def main():
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze unified browser history database and output stats.")
     parser.add_argument('--in', dest="in_db", default="aggregate_history.db", help='Input unified history database (default: aggregate_history.db)')
     parser.add_argument('--out', dest="out_file", default="history.csv", help='Output file (.csv or .json) (default: history.csv)')
@@ -83,6 +84,3 @@ def main():
         logging.info(f"Analysis written to {out_path} (JSON format)")
     else:
         raise ValueError("Output file must have .csv or .json extension")
-
-if __name__ == "__main__":
-    main()

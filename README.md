@@ -34,11 +34,37 @@ This will:
 5. Display a preview of collected data
 
 ## Project Structure
-- `main.py` - Entry point and core logic
-- `config.ini` - Browser path configuration
-- `database.py` - Database operations module
-- `requirements.txt` - Dependencies
-- `utils.py` - Utility functions
+
+```
+.
+├── aggregate_history.py
+├── analyze_history.py
+├── lib
+│   ├── database.py
+│   └── files.py
+├── config.ini
+├── requirements.txt
+└── README.md
+```
+
+- `aggregate_history.py` - CLI tool: aggregate browser histories to a unified SQLite DB
+- `analyze_history.py`   - CLI tool: analyze a unified history database and output stats
+- `lib/database.py`      - Database operations, data classes, core aggregation logic
+- `lib/files.py`         - Utility (e.g., safe file operations)
+- `config.ini`           - Browser path configuration
+- `requirements.txt`     - Install dependencies
+
+## Usage
+
+Aggregate all browser histories:
+```
+python aggregate_history.py --config config.ini --out aggregate_history.db
+```
+
+Analyze the database (to .csv or .json):
+```
+python analyze_history.py --in aggregate_history.db --out output.csv
+```
 
 ## Output
-A SQLite database file (`unified_history.db`) containing consolidated browser history data, along with logging output showing the scanning process and statistics.
+A SQLite database file (`aggregate_history.db`) containing consolidated browser history data, plus CSV/JSON statistics files as requested.
